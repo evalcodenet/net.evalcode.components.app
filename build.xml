@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="net.evalcode.components.app" basedir="." default="build">
+
+
+  <!-- properties -->
+  <property file="build.properties"/>
+
+
+  <!-- cleanup -->
+  <target name="cleanup">
+    <delete dir="${path.build}" includeemptydirs="true"/>
+  </target>
+
+
+  <!-- prepare -->
+  <target name="prepare" depends="cleanup">
+    <mkdir dir="${path.build}"/>
+    <mkdir dir="${path.build.log}"/>
+  </target>
+
+
+  <!-- documentations [api] -->
+  <target name="doc.api" depends="prepare">
+    <mkdir dir="${path.doc}"/>
+    <mkdir dir="${path.doc.api}"/>
+    <exec executable="${env.bin.phpdoc}" dir="${path.build.log}">
+      <arg value="-d"/>
+      <arg value="${path.source}"/>
+      <arg value="-t"/>
+      <arg value="${path.doc.api}"/>
+      <arg value="-i"/>
+      <arg value="${path.app}"/>
+      <arg value="--defaultpackagename=${doc.api.package}"/>
+      <arg value="--template=${doc.api.template}"/>
+      <arg value="--visibility=${doc.api.visibility}"/>
+      <arg value="--sourcecode"/>
+      <arg value="--force"/>
+    </exec>
+  </target>
+
+
+  <!-- reports [cpd] -->
+  <target name="report.cpd" depends="prepare">
+    <exec executable="${env.bin.phpcpd}" dir="${path.build.log}">
+      <arg value="--exclude"/>
+      <arg value="${path.app}"/>
+      <arg value="--min-lines"/>
+      <arg value="${report.cpd.min.lines}"/>
+      <arg value="--min-tokens"/>
+      <arg value="${report.cpd.min.tokens}"/>
+      <arg value="--log-pmd"/>
+      <arg value="${report.cpd.file}"/>
+      <arg value="${path.source}"/>
+    </exec>
+  </target>
+
+
+  <!-- reports [pmd] -->
+  <target name="report.pmd" depends="prepare">
+    <exec executable="${env.bin.phpmd}" dir="${path.build.log}">
+      <arg value="${path.source}"/>
+      <arg value="${report.pmd.type}"/>
+      <arg value="${report.pmd.rulesets}"/>
+      <arg value="--exclude"/>
+      <arg value="${report.pmd.ignore}"/>
+      <arg value="--reportfile"/>
+      <arg value="${report.pmd.file}"/>
+    </exec>
+  </target>
+
+
+  <!-- reports [pdepend] -->
+  <target name="report.pdepend" depends="prepare">
+    <exec executable="${env.bin.pdepend}" dir="${path.build.log}">
+      <arg line="--jdepend-xml=${report.pdepend.file} ${path.source}"/>
+    </exec>
+  </target>
+
+
+  <!-- reports [loc] -->
+  <target name="report.loc" depends="prepare">
+    <exec executable="${env.bin.sloccount}" dir="${path.build.log}" output="${report.loc.file}" failonerror="false">
+      <arg line="--duplicates --wide --details --addlangall ${path.source}"/>
+    </exec>
+  </target>
+
+
+  <!-- tests [unit] -->
+  <target name="test.unit" depends="prepare">
+    <exec executable="${env.bin.test.unit}" dir="${path.build.log}">
+      <arg value="-p"/>
+      <arg value="${test.unit.path.root}"/>
+      <arg value="-b"/>
+      <arg value="${test.unit.path.build}"/>
+      <arg value="-a"/>
+      <arg value="${test.unit.analyzers}"/>
+    </exec>
+  </target>
+
+
+  <!-- build [default] -->
+  <target name="build" depends="
+      test.unit,
+      cleanup
+    "/>
+
+
+  <!-- build [continuous integration] -->
+  <target name="build.ci" depends="
+      doc.api,
+      report.cpd,
+      report.pmd,
+      report.pdepend,
+      report.loc,
+      test.unit
+    "/>
+
+
+</project>

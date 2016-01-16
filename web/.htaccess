@@ -1,0 +1,4 @@
+Allow from all
+
+RewriteEngine on
+RewriteRule .* index.php [L]
